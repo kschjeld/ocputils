@@ -3,6 +3,7 @@ module github.com/kschjeld/ocputils
 go 1.13
 
 require (
+	github.com/bitly/go-simplejson v0.5.0
 	github.com/go-logr/logr v0.1.0
 	github.com/imdario/mergo v0.3.7 // indirect
 	github.com/openshift/api v3.9.0+incompatible
