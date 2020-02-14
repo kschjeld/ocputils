@@ -109,8 +109,8 @@ func extractGitUrl(raw []byte) (string, error) {
 		labels := json.GetPath("Config", "Labels")
 		if labels != nil {
 			labelsMap, err := labels.Map()
-			if err != nil {
-				return "", err
+			if labelsMap == nil || err != nil {
+				return "", nil
 			}
 			for l, v := range labelsMap {
 				// We have labelled with whitespace in front of key, so can not simply look up by relevant key
