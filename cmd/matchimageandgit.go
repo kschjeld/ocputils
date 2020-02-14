@@ -106,29 +106,21 @@ func extractGitUrl(raw []byte) (string, error) {
 	}
 
 	if json != nil {
-		j, err := json.Map()
-		if err != nil {
-			return "", err
-		}
-
-		if confIf, found := j["Config"]; found {
-
-			if conf, ok := confIf.(map[string]interface{}); ok {
-				if labelsIf, found := conf["Labels"]; found {
-
-					if labels, ok := labelsIf.(map[string]interface{}); ok {
-						for l, v := range labels {
-							// We have labelled with whitespace in front of key, so can not simply look up by relevant key
-							if strings.Contains(l, Label_GitUrl) {
-								return v.(string), nil
-							}
-						}
-					}
+		labels := json.GetPath("Config", "Labels")
+		if labels != nil {
+			labelsMap, err := labels.Map()
+			if err != nil {
+				return "", err
+			}
+			for l, v := range labelsMap {
+				// We have labelled with whitespace in front of key, so can not simply look up by relevant key
+				if strings.Contains(l, Label_GitUrl) {
+					return v.(string), nil
 				}
 			}
-
 		}
 	}
+
 	return "", nil
 }
 
