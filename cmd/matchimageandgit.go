@@ -79,42 +79,15 @@ func main() {
 					continue
 				}
 
-				json, err := simplejson.NewFromReader(bytes.NewReader(image.DockerImageMetadata.Raw))
+				gitUrl, err := extractGitUrl(image.DockerImageMetadata.Raw)
 				if err != nil {
 					panic(err)
 				}
 
-				if json != nil {
-					j, err := json.Map()
-					if err != nil {
-						panic(err)
-					}
-
-					if confIf, found := j["Config"]; found {
-
-						if conf, ok := confIf.(map[string]interface{}); ok {
-							if labelsIf, found := conf["Labels"]; found {
-
-								if labels, ok := labelsIf.(map[string]interface{}); ok {
-									foundGitUrl := false
-									for l, v := range labels {
-										// We have labelled with whitespace in front of key, so can not simply look up by relevant key
-										if strings.Contains(l, Label_GitUrl) {
-											foundGitUrl = true
-											fmt.Printf("   > Image: %s\n", c.Image)
-											fmt.Printf("   > Git URL: %s\n", v)
-										}
-									}
-
-									if !foundGitUrl {
-										unmappedImages = append(unmappedImages, c.Image)
-										//fmt.Printf("Did not find Git url in this:\n%v\n", labels )
-									}
-								}
-							}
-						}
-
-					}
+				if gitUrl != "" {
+					fmt.Printf("  > Image: %s Git: %s\n", c.Image, gitUrl)
+				} else {
+					unmappedImages = append(unmappedImages, c.Image)
 				}
 			}
 		}
@@ -124,6 +97,39 @@ func main() {
 	for  _, i := range unmappedImages {
 		fmt.Println(" - " + i)
 	}
+}
+
+func extractGitUrl(raw []byte) (string, error) {
+	json, err := simplejson.NewFromReader(bytes.NewReader(raw))
+	if err != nil {
+		return "", err
+	}
+
+	if json != nil {
+		j, err := json.Map()
+		if err != nil {
+			return "", err
+		}
+
+		if confIf, found := j["Config"]; found {
+
+			if conf, ok := confIf.(map[string]interface{}); ok {
+				if labelsIf, found := conf["Labels"]; found {
+
+					if labels, ok := labelsIf.(map[string]interface{}); ok {
+						for l, v := range labels {
+							// We have labelled with whitespace in front of key, so can not simply look up by relevant key
+							if strings.Contains(l, Label_GitUrl) {
+								return v.(string), nil
+							}
+						}
+					}
+				}
+			}
+
+		}
+	}
+	return "", nil
 }
 
 func getImageSha(image string) string {
