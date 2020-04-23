@@ -112,9 +112,13 @@ func writeGroupsJSONFile(f *os.File, groupslist []v1.Group) error {
 		g := ocpgroup {
 			Name: group.Name,
 		}
+		users := []string{}
 		for _, u := range group.Users {
-			g.Users = append(g.Users, u)
+			users = append(users, u)
 		}
+		sort.Strings(users)
+		g.Users = users
+
 		ocpgroups = append(ocpgroups, g)
 	}
 
