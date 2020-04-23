@@ -87,13 +87,13 @@ func main() {
 				if gitUrl != "" {
 					fmt.Printf("  > Image: %s Git: %s\n", c.Image, gitUrl)
 				} else {
-					unmappedImages = append(unmappedImages, c.Image)
+					unmappedImages = append(unmappedImages, fmt.Sprintf("Deploymentconfig: %s/%s Image: %s", nsName, dc.Name, c.Image))
 				}
 			}
 		}
 	}
 
-	fmt.Println("\n\nUnable to get Git URL for following images:")
+	fmt.Println("\n\nUnable to get Git URL for following:")
 	for  _, i := range unmappedImages {
 		fmt.Println(" - " + i)
 	}
