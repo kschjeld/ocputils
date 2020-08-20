@@ -99,7 +99,7 @@ func main() {
 			for _, user := range group.Users {
 				name := userinfo.GetFullname(user)
 				if strings.Contains(strings.ToLower(name), *searchUserName) {
-					fmt.Printf("Found: %s in group %s\n", name, group.Name)
+					fmt.Printf("Found: %s (%s) in group %s\n", name, user, group.Name)
 				}
 			}
 		}
