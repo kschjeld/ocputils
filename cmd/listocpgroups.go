@@ -14,12 +14,14 @@ import (
 	"os"
 	"path"
 	"sort"
+	"strings"
 	"text/tabwriter"
 )
 
 func main() {
 
 	showGroup := flag.String("group", "", "Group to show, or empty to show all")
+	searchUserName := flag.String("search", "", "Search for users with given name")
 	useSimpleOutput := flag.Bool("simple", false, "Show output using simple Ansible Tower compatible formatting")
 	exportDefinitions := flag.String("export", "", "Export definitions into simple text-files in given directory, one pr group")
 	exportGroupsFile := flag.String("groupsfile", "", "Create json file with group definitions for use with opt-ansible-groups")
@@ -87,6 +89,19 @@ func main() {
 
 		if err := f.Close(); err != nil {
 			fmt.Printf("Error closing file: %s", err)
+		}
+		return
+	}
+
+	if *searchUserName != "" {
+		*searchUserName = strings.ToLower(*searchUserName)
+		for _, group := range groupList {
+			for _, user := range group.Users {
+				name := userinfo.GetFullname(user)
+				if strings.Contains(strings.ToLower(name), *searchUserName) {
+					fmt.Printf("Found: %s in group %s\n", name, group.Name)
+				}
+			}
 		}
 		return
 	}
