@@ -10,6 +10,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	coreV1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"log"
+	"sort"
 	"strings"
 	simplejson "github.com/bitly/go-simplejson"
 )
@@ -24,6 +25,7 @@ no.telenor.git.url=ssh://git@prima.corp.telenor.no:7999/~t940807/t940807-the-bes
  */
 
 const Label_GitUrl = "git.url"
+
 
 func main() {
 
@@ -56,9 +58,12 @@ func main() {
 
 	var unmappedImages []string
 
+	//Header
+	fmt.Println(" OS NameSpace \t OS Deployment Config \t OS Image \t BitBucket Project \t Bit Bucket Repo")
+
+
 	for _, ns := range nsList.Items {
 		nsName := ns.Name
-		fmt.Printf("\n%s\n", nsName)
 
 		dcs, err := appsClient.DeploymentConfigs(nsName).List(metav1.ListOptions{})
 		if err != nil {
@@ -66,9 +71,14 @@ func main() {
 		}
 
 		for _, dc := range dcs.Items {
-			fmt.Println(" - " + dc.Name)
 
 			for _, c := range dc.Spec.Template.Spec.Containers {
+
+				// Skip sidecar containers
+				if strings.Contains(c.Name, "sidecar") {
+					continue
+				}
+
 				if !strings.Contains(c.Image, "@") {
 					// Will only look at images referenced with SHA
 					continue
@@ -81,21 +91,26 @@ func main() {
 
 				gitUrl, err := extractGitUrl(image.DockerImageMetadata.Raw)
 				if err != nil {
-					panic(err)
+					fmt.Printf("Error extracting git url: %s\n", err)
+					continue
 				}
 
 				if gitUrl != "" {
-					fmt.Printf("  > Image: %s Git: %s\n", c.Image, gitUrl)
+					parts := strings.Split(gitUrl, "/")
+					if len(parts) != 5 {
+						fmt.Printf("Error. Git URL should have had 5 parts" +  gitUrl)
+					}
+					fmt.Printf("%s \t %s \t %s \t %s \t %s \n", nsName, dc.Name ,c.Image, parts[3],parts[4])
 				} else {
-					unmappedImages = append(unmappedImages, fmt.Sprintf("Deploymentconfig: %s/%s Image: %s", nsName, dc.Name, c.Image))
+					unmappedImages = append(unmappedImages, nsName + "\t" + dc.Name + "\t" + c.Image)
 				}
 			}
 		}
 	}
 
-	fmt.Println("\n\nUnable to get Git URL for following:")
-	for  _, i := range unmappedImages {
-		fmt.Println(" - " + i)
+	sort.Strings(unmappedImages)
+	for _, i := range unmappedImages {
+		fmt.Println( i + " \t \t ")
 	}
 }
 
