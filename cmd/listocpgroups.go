@@ -59,7 +59,7 @@ func main() {
 
 	if *exportDefinitions != "" {
 		for _, group := range groupList {
-			f, err := os.Create(path.Join(*exportDefinitions, group.Name + ".txt") )
+			f, err := os.Create(path.Join(*exportDefinitions, group.Name+".txt"))
 			if err != nil {
 				fmt.Printf("Failed to write file: %s\n", err)
 				os.Exit(1)
@@ -98,7 +98,7 @@ func main() {
 		for _, group := range groupList {
 			for _, user := range group.Users {
 				name := userinfo.GetFullname(user)
-				if strings.Contains(strings.ToLower(name), *searchUserName) {
+				if strings.Contains(strings.ToLower(name), *searchUserName) || strings.Contains(user, *searchUserName) {
 					fmt.Printf("Found: %s (%s) in group %s\n", name, user, group.Name)
 				}
 			}
@@ -118,13 +118,13 @@ func main() {
 
 func writeGroupsJSONFile(f *os.File, groupslist []v1.Group) error {
 	type ocpgroup struct {
-		Name string 		`json:"name"`
-		Users []string 		`json:"users"`
+		Name  string   `json:"name"`
+		Users []string `json:"users"`
 	}
 	var ocpgroups []ocpgroup
 
 	for _, group := range groupslist {
-		g := ocpgroup {
+		g := ocpgroup{
 			Name: group.Name,
 		}
 		users := []string{}
